@@ -11,7 +11,6 @@ return new class extends Migration {
             if (!Schema::hasColumn('visits', 'link_id')) {
                 // safeguard; expected to exist in base migration
             }
-            $table->index(['link_id', 'created_at'], 'visits_link_id_created_at_index');
             $table->index('link_id', 'visits_link_id_index');
             $table->index('created_at', 'visits_created_at_index');
         });
@@ -20,7 +19,6 @@ return new class extends Migration {
     public function down(): void
     {
         Schema::table('visits', function (Blueprint $table) {
-            $table->dropIndex('visits_link_id_created_at_index');
             $table->dropIndex('visits_link_id_index');
             $table->dropIndex('visits_created_at_index');
         });
