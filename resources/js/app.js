@@ -3,7 +3,6 @@ import Alpine from 'alpinejs';
 window.Alpine = Alpine;
 Alpine.start();
 
-// ---------------------- COUNTDOWN ----------------------
 function startCountdownTimers() {
   const elements = document.querySelectorAll('.js-countdown[data-expires-at]');
   if (!elements.length) return;
@@ -99,7 +98,6 @@ function startCountdownTimers() {
   setInterval(tick, 1000);
 }
 
-// ---------------------- POLLING ----------------------
 async function startLinksPolling() {
   const pollUrl = document.querySelector('meta[name="links-poll-url"]')?.content || '/links/poll';
 
@@ -137,7 +135,6 @@ async function startLinksPolling() {
   setInterval(tick, 3000);
 }
 
-// ---------------------- QR CODE ----------------------
 function startQrCodeToggles() {
   const handleClick = async (event) => {
     const button = event.target.closest('[data-qrcode-toggle]');
@@ -174,126 +171,6 @@ function startQrCodeToggles() {
   document.addEventListener('click', handleClick);
 }
 
-// ---------------------- DASHBOARD METRICS ----------------------
-function startDashboardMetrics() {
-  const totalEl = document.getElementById('metric-total-links');
-  const activeEl = document.getElementById('metric-active-links');
-  const expiredEl = document.getElementById('metric-expired-links');
-  const clicksEl = document.getElementById('metric-clicks-period');
-  const topTbody = document.getElementById('metric-top-links');
-  const periodSelect = document.getElementById('metric-period');
-
-  if (!totalEl || !activeEl || !expiredEl || !clicksEl || !topTbody || !periodSelect) {
-    return; // not on dashboard page
-  }
-
-  const summaryUrl = document.querySelector('meta[name="metrics-summary-url"]')?.content || '/metrics/summary';
-  const topUrlBase = document.querySelector('meta[name="metrics-top-url"]')?.content || '/metrics/top';
-
-  const renderSummary = (json) => {
-    if (!json) return;
-    if (typeof json.total_links === 'number') totalEl.textContent = String(json.total_links);
-    if (typeof json.active_links === 'number') activeEl.textContent = String(json.active_links);
-    if (typeof json.expired_links === 'number') expiredEl.textContent = String(json.expired_links);
-    if (typeof json.total_clicks_in_period === 'number') clicksEl.textContent = String(json.total_clicks_in_period);
-  };
-
-  const renderTop = (json) => {
-    topTbody.innerHTML = '';
-    const rows = Array.isArray(json?.top) ? json.top : [];
-    if (!rows.length) {
-      const tr = document.createElement('tr');
-      const td = document.createElement('td');
-      td.colSpan = 4;
-      td.className = 'py-2 pr-4 text-gray-500';
-      td.textContent = 'Sem dados ainda';
-      tr.appendChild(td);
-      topTbody.appendChild(tr);
-      return;
-    }
-
-    rows.forEach((r) => {
-      const tr = document.createElement('tr');
-
-      const tdSlug = document.createElement('td');
-      tdSlug.className = 'py-2 pr-4';
-      const a = document.createElement('a');
-      a.href = `/s/${encodeURIComponent(r.slug)}`;
-      a.target = '_blank';
-      a.className = 'text-blue-600 dark:text-blue-400 underline';
-      a.textContent = r.slug || '-';
-      tdSlug.appendChild(a);
-
-      const tdOriginal = document.createElement('td');
-      tdOriginal.className = 'py-2 pr-4 max-w-[28rem]';
-      const divOrig = document.createElement('div');
-      divOrig.className = 'truncate';
-      divOrig.title = r.original_url || '';
-      divOrig.textContent = r.original_url || '';
-      tdOriginal.appendChild(divOrig);
-
-      const tdClicks = document.createElement('td');
-      tdClicks.className = 'py-2 pr-4 text-right';
-      tdClicks.textContent = String(r.clicks ?? 0);
-
-      const tdActions = document.createElement('td');
-      tdActions.className = 'py-2 pl-4 text-right';
-      const wrapper = document.createElement('div');
-      wrapper.className = 'flex gap-2 justify-end';
-      const btnCopy = document.createElement('button');
-      btnCopy.type = 'button';
-      btnCopy.setAttribute('data-copy', '');
-      btnCopy.setAttribute('data-copy-text', `${window.location.origin}/s/${r.slug}`);
-      btnCopy.className = 'inline-flex items-center rounded-md bg-gray-100 dark:bg-gray-700 px-2 py-1 text-xs hover:bg-gray-200 dark:hover:bg-gray-600';
-      btnCopy.textContent = 'Copiar';
-      const linkOpen = document.createElement('a');
-      linkOpen.href = `/s/${encodeURIComponent(r.slug)}`;
-      linkOpen.target = '_blank';
-      linkOpen.className = 'inline-flex items-center rounded-md bg-blue-600 text-white px-2 py-1 text-xs hover:bg-blue-700';
-      linkOpen.textContent = 'Abrir';
-      wrapper.appendChild(btnCopy);
-      wrapper.appendChild(linkOpen);
-      tdActions.appendChild(wrapper);
-
-      tr.appendChild(tdSlug);
-      tr.appendChild(tdOriginal);
-      tr.appendChild(tdClicks);
-      tr.appendChild(tdActions);
-      topTbody.appendChild(tr);
-    });
-
-    // rebind copy handlers for newly added buttons
-    if (typeof setupCopyButtons === 'function') {
-      setupCopyButtons();
-    }
-  };
-
-  const fetchData = async () => {
-    const period = periodSelect.value || '7d';
-    const qs = `?period=${encodeURIComponent(period)}`;
-    try {
-      const [summaryRes, topRes] = await Promise.all([
-        fetch(`${summaryUrl}${qs}`, { headers: { Accept: 'application/json' } }),
-        fetch(`${topUrlBase}${qs}`, { headers: { Accept: 'application/json' } }),
-      ]);
-      if (summaryRes.ok) {
-        const s = await summaryRes.json();
-        renderSummary(s);
-      }
-      if (topRes.ok) {
-        const t = await topRes.json();
-        renderTop(t);
-      }
-    } catch (_) {}
-  };
-
-  periodSelect.addEventListener('change', fetchData);
-  fetchData();
-  // Atualização em tempo real (polling leve)
-  setInterval(fetchData, 5000);
-}
-
-// ---------------------- COPY BUTTONS ----------------------
 function setupCopyButtons() {
   const onClick = async (ev) => {
     const btn = ev.currentTarget;
@@ -313,7 +190,107 @@ function setupCopyButtons() {
   });
 }
 
-// ---------------------- INIT ----------------------
+function startDashboardMetrics() {
+  const totalEl = document.getElementById('metric-total-links');
+  const activeEl = document.getElementById('metric-active-links');
+  const expiredEl = document.getElementById('metric-expired-links');
+  const clicksEl = document.getElementById('metric-clicks-period');
+  const topTbody = document.getElementById('metric-top-links');
+  const periodSelect = document.getElementById('metric-period');
+  if (!totalEl || !activeEl || !expiredEl || !clicksEl || !topTbody || !periodSelect) return;
+  const summaryUrl = document.querySelector('meta[name="metrics-summary-url"]')?.content || '/metrics/summary';
+  const topUrlBase = document.querySelector('meta[name="metrics-top-url"]')?.content || '/metrics/top';
+  const renderSummary = (json) => {
+    if (!json) return;
+    if (typeof json.total_links === 'number') totalEl.textContent = String(json.total_links);
+    if (typeof json.active_links === 'number') activeEl.textContent = String(json.active_links);
+    if (typeof json.expired_links === 'number') expiredEl.textContent = String(json.expired_links);
+    if (typeof json.total_clicks_in_period === 'number') clicksEl.textContent = String(json.total_clicks_in_period);
+  };
+  const renderTop = (json) => {
+    topTbody.innerHTML = '';
+    const rows = Array.isArray(json?.top) ? json.top : [];
+    if (!rows.length) {
+      const tr = document.createElement('tr');
+      const td = document.createElement('td');
+      td.colSpan = 4;
+      td.className = 'py-2 pr-4 text-gray-500';
+      td.textContent = 'Sem dados ainda';
+      tr.appendChild(td);
+      topTbody.appendChild(tr);
+      return;
+    }
+    rows.forEach((r) => {
+      const tr = document.createElement('tr');
+      const tdSlug = document.createElement('td');
+      tdSlug.className = 'py-2 pr-4';
+      const a = document.createElement('a');
+      a.href = `/s/${encodeURIComponent(r.slug)}`;
+      a.target = '_blank';
+      a.className = 'text-blue-600 dark:text-blue-400 underline';
+      a.textContent = r.slug || '-';
+      tdSlug.appendChild(a);
+      const tdOriginal = document.createElement('td');
+      tdOriginal.className = 'py-2 pr-4 max-w-[28rem]';
+      const divOrig = document.createElement('div');
+      divOrig.className = 'truncate';
+      divOrig.title = r.original_url || '';
+      divOrig.textContent = r.original_url || '';
+      tdOriginal.appendChild(divOrig);
+      const tdClicks = document.createElement('td');
+      tdClicks.className = 'py-2 pr-4 text-right';
+      tdClicks.textContent = String(r.clicks ?? 0);
+      const tdActions = document.createElement('td');
+      tdActions.className = 'py-2 pl-4 text-right';
+      const wrapper = document.createElement('div');
+      wrapper.className = 'flex gap-2 justify-end';
+      const btnCopy = document.createElement('button');
+      btnCopy.type = 'button';
+      btnCopy.setAttribute('data-copy', '');
+      btnCopy.setAttribute('data-copy-text', `${window.location.origin}/s/${r.slug}`);
+      btnCopy.className = 'inline-flex items-center rounded-md bg-gray-100 dark:bg-gray-700 px-2 py-1 text-xs hover:bg-gray-200 dark:hover:bg-gray-600';
+      btnCopy.textContent = 'Copiar';
+      const linkOpen = document.createElement('a');
+      linkOpen.href = `/s/${encodeURIComponent(r.slug)}`;
+      linkOpen.target = '_blank';
+      linkOpen.className = 'inline-flex items-center rounded-md bg-blue-600 text-white px-2 py-1 text-xs hover:bg-blue-700';
+      linkOpen.textContent = 'Abrir';
+      wrapper.appendChild(btnCopy);
+      wrapper.appendChild(linkOpen);
+      tdActions.appendChild(wrapper);
+      tr.appendChild(tdSlug);
+      tr.appendChild(tdOriginal);
+      tr.appendChild(tdClicks);
+      tr.appendChild(tdActions);
+      topTbody.appendChild(tr);
+    });
+    if (typeof setupCopyButtons === 'function') {
+      setupCopyButtons();
+    }
+  };
+  const fetchData = async () => {
+    const period = periodSelect.value || '7d';
+    const qs = `?period=${encodeURIComponent(period)}`;
+    try {
+      const [summaryRes, topRes] = await Promise.all([
+        fetch(`${summaryUrl}${qs}`, { headers: { Accept: 'application/json' } }),
+        fetch(`${topUrlBase}${qs}`, { headers: { Accept: 'application/json' } }),
+      ]);
+      if (summaryRes.ok) {
+        const s = await summaryRes.json();
+        renderSummary(s);
+      }
+      if (topRes.ok) {
+        const t = await topRes.json();
+        renderTop(t);
+      }
+    } catch (_) {}
+  };
+  periodSelect.addEventListener('change', fetchData);
+  fetchData();
+  setInterval(fetchData, 5000);
+}
+
 function initApp() {
   startCountdownTimers();
   startLinksPolling();

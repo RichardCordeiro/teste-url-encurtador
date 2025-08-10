@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
+use Illuminate\Support\Facades\DB;
 
 class LinkController extends Controller
 {
@@ -51,7 +52,6 @@ class LinkController extends Controller
             ->with('new_link_id', $link->id);
     }
 
-    // API JSON
     public function apiIndex(Request $request)
     {
         $links = Link::where('user_id', Auth::id())->latest()->paginate(10);
@@ -116,6 +116,15 @@ class LinkController extends Controller
             'user_agent' => substr((string) request()->userAgent(), 0, 1000),
         ]);
 
+        try {
+            $today = now()->toDateString();
+            DB::table('visit_aggregates')->updateOrInsert(
+                ['link_id' => $link->id, 'day' => $today],
+                ['clicks' => DB::raw('clicks + 1'), 'updated_at' => now(), 'created_at' => now()]
+            );
+        } catch (\Throwable $e) {
+        }
+
         return redirect()->away($link->original_url);
     }
 
@@ -157,6 +166,7 @@ class LinkController extends Controller
         $links = Link::query()
             ->where('user_id', Auth::id())
             ->latest('id')
+            ->take(10)
             ->get(['id', 'slug', 'status', 'click_count', 'expires_at']);
 
         return response()->json([
@@ -169,7 +179,7 @@ class LinkController extends Controller
                     'expires_at' => optional($link->expires_at)->toIso8601String(),
                 ];
             }),
-        ]);
+        ])->header('Cache-Control', 'public, max-age=5, s-maxage=5');
     }
 }
 
