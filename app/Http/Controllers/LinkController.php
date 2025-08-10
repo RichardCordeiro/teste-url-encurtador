@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class LinkController extends Controller
 {
@@ -20,7 +21,6 @@ class LinkController extends Controller
         if ($newLinkId) {
             $newLink = Link::where('user_id', Auth::id())->find($newLinkId);
         }
-
         return view('links.index', compact('newLink'));
     }
 
@@ -129,6 +129,17 @@ class LinkController extends Controller
 
         return response()->json([
             'status' => $link->status,
+        ]);
+    }
+
+    public function qrcode(Link $link)
+    {
+        abort_if($link->user_id !== Auth::id(), 403);
+        $shortUrl = url('/s/'.$link->slug);
+        $svg = QrCode::format('svg')->size(256)->generate($shortUrl);
+        return response($svg, 200, [
+            'Content-Type' => 'image/svg+xml; charset=UTF-8',
+            'Cache-Control' => 'no-store, no-cache, must-revalidate',
         ]);
     }
 
