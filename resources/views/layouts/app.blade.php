@@ -5,6 +5,8 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
         <meta name="links-poll-url" content="{{ route('links.poll') }}">
+        <meta name="metrics-summary-url" content="{{ route('metrics.summary') }}">
+        <meta name="metrics-top-url" content="{{ route('metrics.top') }}">
 
         <title>{{ config('app.name', 'Laravel') }}</title>
 
@@ -15,7 +17,7 @@
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
-    <body class="font-sans antialiased">
+    <body class="font-sans antialiased text-gray-900 dark:text-gray-100">
         <div class="min-h-screen bg-gray-100 dark:bg-gray-900">
             @include('layouts.navigation')
 
