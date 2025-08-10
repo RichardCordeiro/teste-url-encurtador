@@ -1,0 +1,46 @@
+# Logs e SO
+*.log
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Variáveis de ambiente
+.env
+.env.*
+!.env.example
+
+# Node/Vite
+/node_modules
+/public/build
+/public/hot
+
+# Laravel
+/public/storage
+/bootstrap/cache/*.php
+!bootstrap/cache/.gitignore
+
+# Composer
+/vendor
+/auth.json
+
+# PHPUnit e caches
+.phpunit.result.cache
+/.phpunit.cache
+.phpactor.json
+
+# IDEs/Editors
+/.idea
+/.vscode
+/.fleet
+/.zed
+/.nova
+
+# Cobertura de testes
+/coverage
+
+# Banco de dados local (SQLite)
+/database/*.sqlite*
+
+# Homestead
+Homestead.json
+Homestead.yaml
